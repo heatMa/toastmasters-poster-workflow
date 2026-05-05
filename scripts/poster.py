@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import textwrap
 from collections import deque
@@ -14,6 +15,8 @@ from typing import Any, Iterable
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
+
+from qr_vision import detect_qr_box_with_vision
 
 
 POSTER_SIZE = (1080, 1920)
@@ -796,6 +799,8 @@ def finalize_ai(
     *,
     debug: bool = False,
     debug_path: Path | None = None,
+    skip_vision: bool = False,
+    vision_model_override: str | None = None,
 ) -> dict[str, Any]:
     root = repo_root()
     check_assets(event, root, strict=True)
@@ -814,11 +819,39 @@ def finalize_ai(
     debug_sink: dict[str, Any] = {}
 
     auto_detect = bool_from_layout(event, "qr_auto_detect", True)
-    if auto_detect:
-        search_region = region_from_layout(event, "qr_search_region", [0, 1450, 360, 1900])
-        ring_hint_rgb = _hex_to_rgb(layout.get("qr_ring_color_hint")) or _hex_to_rgb(
-            event.get("style", {}).get("brand_color")
-        )
+    search_region = region_from_layout(event, "qr_search_region", [0, 1450, 360, 1900])
+    ring_hint_rgb = _hex_to_rgb(layout.get("qr_ring_color_hint")) or _hex_to_rgb(
+        event.get("style", {}).get("brand_color")
+    )
+    debug_sink["search_region"] = search_region
+
+    vision_cfg = layout.get("qr_vision") or {}
+    vision_enabled = bool(vision_cfg.get("enabled", False)) and not skip_vision
+    if vision_enabled:
+        if vision_model_override:
+            vision_cfg = {**vision_cfg, "model": vision_model_override}
+        api_key = os.environ.get(vision_cfg.get("api_key_env", "KIMI_API_KEY"), "")
+        if not api_key:
+            print(
+                "[WARN] qr_vision.enabled=true but "
+                f"{vision_cfg.get('api_key_env', 'KIMI_API_KEY')} is not set; skipping vision."
+            )
+        else:
+            vision_box = detect_qr_box_with_vision(
+                poster,
+                search_region,
+                config=vision_cfg,
+                api_key=api_key,
+                debug_sink=debug_sink,
+            )
+            if vision_box is not None:
+                qr_box = vision_box
+                qr_source = "vision"
+            else:
+                err = debug_sink.get("vision_error", "unknown")
+                print(f"[WARN] K2 vision detection failed ({err}); falling back to pixel detector.")
+
+    if qr_source != "vision" and auto_detect:
         detected_qr_box = detect_qr_blank_box(
             poster,
             search_region,
@@ -866,9 +899,10 @@ def finalize_ai(
     poster.convert("RGB").save(output_path, "PNG", optimize=True)
     print(f"QR box: {qr_box} ({qr_source})")
 
-    if debug and auto_detect:
+    if debug and (auto_detect or vision_enabled):
         target = debug_path or output_path.with_name(f"qr-detection-debug-{candidate_path.stem}.png")
-        _save_qr_debug_image(poster, debug_sink, qr_box if qr_source == "auto-detected" else None, qr_source, target)
+        selected_box = qr_box if qr_source in ("auto-detected", "vision") else None
+        _save_qr_debug_image(poster, debug_sink, selected_box, qr_source, target)
         print(f"Wrote debug image: {target}")
 
     return {
@@ -910,7 +944,14 @@ def finalize_command(args: argparse.Namespace) -> None:
     output = Path(args.output) if args.output else paths.ai_clean_final_file
     if not output.is_absolute():
         output = paths.root / output
-    finalize_ai(event, candidate, output, debug=bool(getattr(args, "debug", False)))
+    finalize_ai(
+        event,
+        candidate,
+        output,
+        debug=bool(getattr(args, "debug", False)),
+        skip_vision=bool(getattr(args, "no_vision", False)),
+        vision_model_override=getattr(args, "vision_model", None),
+    )
     print(f"Wrote {output}")
 
 
@@ -935,6 +976,8 @@ def build_parser() -> argparse.ArgumentParser:
     finalize_parser.add_argument("--input", help="optional AI candidate image path")
     finalize_parser.add_argument("--output", help="optional output path")
     finalize_parser.add_argument("--debug", action="store_true", help="save QR-detection debug image alongside the final poster")
+    finalize_parser.add_argument("--no-vision", action="store_true", dest="no_vision", help="skip K2 vision detector and use the local pixel detector only")
+    finalize_parser.add_argument("--vision-model", dest="vision_model", help="override layout.qr_vision.model for this run")
     finalize_parser.set_defaults(func=finalize_command)
     return parser
 

@@ -1,0 +1,96 @@
+{
+  "slug": "2026-05-17-meeting-871",
+  "theme": "人人都能做5分钟“解读师”",
+  "subtitle": "唤醒直觉，连接内在智慧",
+  "speaker": {
+    "name": "宋思甍",
+    "title": "心能觉醒身心灵平台创始人 / 正念疗愈师 / 超感解读师导师",
+    "bio": "心能觉醒身心灵平台创始人，正念疗愈师，企业正念教练，超感解读师导师，澳洲采光晶露调频师导师，星际玛雅13月亮历解读师。"
+  },
+  "event": {
+    "time": "2026年5月17日 周日 14:00-17:00",
+    "location": "乌鲁木齐南路66号梧桐院邻里汇3号楼2楼（地铁1号线衡山路站4号口步行400米）",
+    "fee": "来宾35元 / 其他俱乐部会员25元 / 学生15元 / 角色免费"
+  },
+  "club": {
+    "name": "上海活力中文演讲俱乐部",
+    "meeting_number": "第871次会议",
+    "wechat_label": "扫码联系俱乐部"
+  },
+  "poster_copy": {
+    "reference_direction": "温暖治愈系的身心灵活动海报，右侧主讲人自然光肖像，左侧大标题，中下部嘉宾介绍和「你将收获」模块，底部深蓝信息栏，留白充足，专业可信。",
+    "visual_direction": "围绕「解读」与「正念」建立视觉隐喻：直觉、能量、水晶、星图、自然光。整体应温暖、柔和、有灵性但不玄乎。",
+    "visual_keywords": [
+      "水晶能量",
+      "星图罗盘",
+      "自然光晕",
+      "正念冥想",
+      "直觉之眼"
+    ],
+    "benefits": [
+      {
+        "title": "掌握解读技巧",
+        "description": "5分钟快速入门，连接内在智慧"
+      },
+      {
+        "title": "提升直觉力",
+        "description": "激活感知，看见更多可能性"
+      },
+      {
+        "title": "正念减压",
+        "description": "疗愈身心，回归当下平静"
+      },
+      {
+        "title": "能量调频",
+        "description": "探索身心灵奥秘，提升状态"
+      }
+    ],
+    "call_to_action": "扫码报名，开启你的解读之旅！",
+    "footer": "TOASTMASTERS 国际演讲俱乐部"
+  },
+  "assets": {
+    "speaker_photo": "assets/speakers/song-simeng.png",
+    "logo": "assets/brand/toastmasters-international-official.png",
+    "qr": "assets/qr/vibrant-wechat-qr.jpg"
+  },
+  "layout": {
+    "logo_mode": "ai",
+    "logo_background": false,
+    "logo_box": [
+      30,
+      28,
+      178,
+      150
+    ],
+    "qr_box": [
+      74,
+      1618,
+      150,
+      150
+    ],
+    "qr_auto_detect": true,
+    "qr_search_region": [
+      0,
+      1450,
+      360,
+      1900
+    ],
+    "qr_padding": 0,
+    "qr_vision": {
+      "enabled": true,
+      "model": "kimi-for-coding",
+      "base_url": "https://api.kimi.com/coding/",
+      "api_key_env": "KIMI_API_KEY",
+      "x_client": "claude-code",
+      "user_agent": "claude-code/1.0",
+      "timeout_seconds": 30,
+      "jpeg_quality": 85,
+      "max_tokens": 512
+    }
+  },
+  "style": {
+    "tone": "高端杂志感",
+    "accent_color": "#F2C76E",
+    "brand_color": "#004165"
+  }
+}

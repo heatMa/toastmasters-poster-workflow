@@ -68,7 +68,18 @@
       170,
       170
     ],
-    "qr_padding": 0
+    "qr_padding": 0,
+    "qr_vision": {
+      "enabled": false,
+      "model": "kimi-for-coding",
+      "base_url": "https://api.kimi.com/coding/",
+      "api_key_env": "KIMI_API_KEY",
+      "x_client": "claude-code",
+      "user_agent": "claude-code/1.0",
+      "timeout_seconds": 30,
+      "jpeg_quality": 85,
+      "max_tokens": 512
+    }
   },
   "style": {
     "tone": "高端杂志感",

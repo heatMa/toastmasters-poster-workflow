@@ -132,15 +132,79 @@ pytest>=8.0.0
 - **未做**：debug 图里画 ring 区域。目前 ring 信息只通过 console 文本看到。
 - **可考虑**：在 `prepare` 阶段直接把 3 个 finalize 候选图都跑一遍并人眼比较，目前需要手动一张张来。
 
-## 当前结论
+## 2026-05-05 已切换到 K2.6 Vision 主路径
+
+用户决定改走 K2.6 大模型直接识别二维码空白块坐标，像素法降级为兜底。
+
+### 新架构
+
+- **主路径**：`scripts/qr_vision.py` → `POST https://api.kimi.com/coding/v1/chat/completions`
+  - crop `search_region` → JPEG → base64 → vision model
+  - model: `kimi-for-coding`，需 `x-client: claude-code` + `User-Agent: claude-code/1.0` header
+  - `thinking: {"type": "disabled"}` 必须，否则模型消耗全部 token 在 reasoning 上
+  - 解析 JSON 坐标 → 正方形归一化 → 像素健全性校验（中心 60% 近白像素占比 ≥ 55%）
+- **中间兜底**：现有 `detect_qr_blank_box` 像素法（全部能力保留）
+- **最终兜底**：`layout.qr_box` 配置坐标
+
+### 回归结果
+
+| 候选 | 检测路径 | QR box (x,y,w,h) |
+|---|---|---|
+| candidate-ai-clean-1 | vision | (54, 1514, 182, 182) |
+| candidate-ai-clean-2 | vision | (55, 1565, 230, 230) |
+| candidate-ai-clean-3 | vision | (48, 1670, 230, 230) |
+
+3 张全部 `qr_source=vision`，无需再 fallback 到像素法。
+
+### 新增/修改文件
+
+- `scripts/qr_vision.py` — 新建，封装 K2 vision 调用
+- `scripts/poster.py` — `finalize_ai` 插入 vision 优先级；`finalize` 子命令增加 `--no-vision`、`--vision-model`
+- `events/2026-05-10-meeting-872.json` — 新增 `layout.qr_vision`
+- `examples/event.example.json` — 同步示例
+- `requirements.txt` — 新增 `requests>=2.31.0`
+- `tests/test_qr_vision_unit.py` — 新建，12 个 mock HTTP 单测
+- `.env.example` — 新建
+- `.gitignore` — 忽略 `.env`
+
+### 配置字段
+
+```json
+"qr_vision": {
+  "enabled": true,
+  "model": "kimi-for-coding",
+  "base_url": "https://api.kimi.com/coding/",
+  "api_key_env": "KIMI_API_KEY",
+  "x_client": "claude-code",
+  "user_agent": "claude-code/1.0",
+  "timeout_seconds": 30,
+  "jpeg_quality": 85,
+  "max_tokens": 512
+}
+```
+
+### CLI 用法
+
+```bash
+# 默认走 K2 vision，失败自动回退像素法 → 配置坐标
+python scripts/poster.py finalize --event events/2026-05-10-meeting-872.json --candidate 1 --debug
+
+# 跳过 vision，强制旧路径（调试 / 离线用）
+python scripts/poster.py finalize --event ... --candidate 1 --no-vision --debug
+
+# 临时换模型对比效果
+python scripts/poster.py finalize --event ... --candidate 1 --vision-model other-model
+```
+
+### 当前结论
 
 二维码贴图本身没有问题：Pillow 直接贴图，不经过大模型。
 
 二维码定位已从"基础连通域 + 单一 ring 假设"升级为：
 
-1. 列/行覆盖率重切 + `side = min(w, h)` 正方形归一化（防漏字撑高）；
-2. 通用 ring 一致性 + 高对比度（不预设颜色）；
-3. 纯白块直通路径（兼容无深色 ring 的海报）；
-4. 可选的 `qr_ring_color_hint` 仅作软加分项，不再是硬依赖。
+1. **K2.6 vision 主路径**：AI 看 AI 画的图，定位准确，覆盖不同风格；
+2. **像素法中间兜底**：`detect_qr_blank_box` 全部能力保留，网络不通 / API 失败时自动接管；
+3. **配置坐标最终兜底**：`layout.qr_box` 作为最后安全网，确保任何情况下海报都能产出；
+4. **三级兜底链**：`vision → auto-detected → configured fallback`，稳态不中断。
 
-3 张候选图全部 auto-detected，pytest 通过，debug 图可供人工复核。下次新海报失败时优先看 debug 图调阈值，必要时可补充 fixture 锁定行为。
+3 张候选图全部 vision 通过，`pytest` 15 个全绿，debug 图可供人工复核。下次新海报失败时优先看 debug 图和 `vision_raw_response`，必要时在 `qr_vision.py` 调 prompt 或放宽 `white_ratio` 阈值。
