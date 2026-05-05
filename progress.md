@@ -12,268 +12,135 @@
 
 二维码必须使用真实素材，不让 AI 生成，因为 AI 生成的二维码不可扫码。
 
+## 当前状态：自动检测已稳定
+
+3 张候选图全部 auto-detected，`pytest tests/test_qr_detection.py` 全绿。
+fallback `qr_box` 仅作为兜底；正常路径不再触发。
+
+| 候选 | 检测路径 | QR box (x,y,w,h) | ring 中位色 | cons / contr |
+|---|---|---|---|---|
+| candidate-ai-clean-1 | ring 通用判定 | (57, 1592, 183, 183) | (1,81,167) 深蓝 | 13 / 188 |
+| candidate-ai-clean-2 | ring 通用判定 | (68, 1592, 183, 183) | (4,69,159) 渐变蓝 | 134 / 195 |
+| candidate-ai-clean-3 | 纯白块直通 | (61, 1710, 190, 190) | (253,253,253) 浅背景 | 215 / 2 |
+
 ## 当前文件
 
-- 主脚本：`/Users/rongbo/Documents/New project 3/scripts/poster.py`
-- 本期配置：`/Users/rongbo/Documents/New project 3/events/2026-05-10-meeting-872.json`
-- 本期输出目录：`/Users/rongbo/Documents/New project 3/outputs/2026-05-10-meeting-872/`
-- 真实二维码素材：`/Users/rongbo/Documents/New project 3/assets/qr/vibrant-wechat-qr.jpg`
-- 当前最终图：`/Users/rongbo/Documents/New project 3/outputs/2026-05-10-meeting-872/final-poster-ai-clean.png`
+- 主脚本：`scripts/poster.py`
+- 本期配置：`events/2026-05-10-meeting-872.json`
+- 本期输出目录：`outputs/2026-05-10-meeting-872/`
+- 真实二维码素材：`assets/qr/vibrant-wechat-qr.jpg`
+- 当前最终图：`outputs/2026-05-10-meeting-872/final-poster-ai-clean-{1,2,3}.png`
+- Debug 图：`outputs/2026-05-10-meeting-872/qr-detection-debug-candidate-ai-clean-{1,2,3}.png`
+- 回归测试：`tests/test_qr_detection.py`
 
-## 已尝试的二维码定位方案
+## 已实施的算法
 
-### 方案 1：手写 `layout.qr_box`
+### 1. numpy 化的连通域 + 形态学
 
-最早做法是在 event JSON 里手写二维码坐标：
+- 用 numpy 做白色像素阈值（`minc >= 210`，`max-min <= 45`）。
+- 用 PIL 的 `MaxFilter(3)` + `MinFilter(3)` 做形态学闭运算，修复抗锯齿/圆角导致的小断裂。
+- BFS 连通域（4 邻接），用 `collections.deque` 替代列表，无递归。
+
+### 2. 列/行覆盖率法重切 bbox + side = min(w, h)
+
+raw 连通域 bbox 容易被白块下方的小字（"扫码报名…"）撑高。重切流程：
+
+1. 用 raw bbox 内每列/每行的白色覆盖率切出"高密度核心"。
+2. 阈值取 `max(0.85, peak * 0.85)`，自适应。
+3. 正方形归一化用 `side = min(core_w, core_h)`，避免被漏字撑成竖长方形；中心居中。
+
+### 3. 通用 ring 判定（不预设包围色）
+
+外扩 16 px 的 ring（去掉 4 px 缓冲区避免抗锯齿污染）：
+
+- **一致性**：ring 内每像素到 ring 中位色的 L1 距离均值 ≤ 150。
+- **对比度**：ring 中位色的 BT.601 luma 与白色对比 ≥ 60。
+- 不假设包围色是任何特定颜色（蓝 / brand_color / etc.）。深蓝、深红、深紫、纯黑、品牌色渐变都能通过。
+- 可选 `layout.qr_ring_color_hint`（默认回退到 `style.brand_color`）作为**软加分项**，存在时给一个 0–0.4 的得分加成；不存在也能正常工作。
+
+### 4. 纯白块直通路径（fallback）
+
+针对 candidate-3 这种"AI 没画清晰深色 ring，QR 区直接坐在浅色背景上"的场景：
+
+- 核心采样区（白块中心 1/2 边长）的中位 RGB ≥ 245 且最小通道 ≥ 200。
+- fill ≥ 0.95、side ≥ 140、bbox aspect ∈ [0.8, 1.25]。
+- 满足上述条件即使 ring 检测失败也能入选，但 score 加成（+0.5）显著低于 ring 路径（+2.0），保证有 ring 候选时优先选 ring。
+
+### 5. Debug 图 + 失败 WARN
+
+- `--debug` 选项保存 `qr-detection-debug-<candidate>.png`：黄框为 search region，灰框为所有 raw 连通域，青框为 raw bbox，粉框为归一化后的正方形候选，绿框为最终选中的 box，并标注 score/fill/cons/contr。
+- 自动检测全失败时打印 `[WARN] QR auto-detection found no candidate; falling back to layout.qr_box=...`，提示人工核对。
+
+### 6. 回归测试
+
+`tests/test_qr_detection.py` 用三张候选图作为 fixture：
+
+- 中心点偏差 ≤ 8 px、边长偏差 ≤ 12 px、必须返回正方形。
+- candidate-1/2 必须走 ring 路径，candidate-3 必须走 pure-white-block 路径。
+
+## 主要分数权重（仅供参考）
+
+```text
+score = 1.6 * square          # core_w/core_h 越接近 1 越高
+      + 1.0 * fill            # raw bbox 内白像素填充率
+      + 0.8 * size            # 边长平方 / 40000，封顶 1
+      + 1.0 * consistency     # 1 - cons/150，封顶 1
+      + 1.0 * contrast        # contr/120，封顶 1
+      + 0.4 * hint            # 1 - dist(ring_median, hint)/120，可选
+      + 2.0 if ring_passes
+      + 0.5 if pure_white_block
+```
+
+## 配置项
+
+`events/<slug>.json` 的 `layout` 块支持：
 
 ```json
-"qr_box": [74, 1618, 150, 150]
+{
+  "layout": {
+    "logo_mode": "ai",
+    "logo_box": [...],
+    "qr_box": [74, 1618, 150, 150],
+    "qr_auto_detect": true,
+    "qr_search_region": [0, 1450, 360, 1900],
+    "qr_padding": 0,
+    "qr_ring_color_hint": "#004165"   // 可选，缺省回退到 style.brand_color
+  }
+}
 ```
 
-脚本用 Pillow 直接把真实二维码 resize 后贴到这个矩形里。这个过程不经过大模型。
+`qr_search_region` 默认值已从原来的 `[0, 1450, 360, 1845]` 扩到 `[0, 1450, 360, 1900]`，避免把 candidate-3 这种位置较低的白块底端切掉。
 
-问题：
+## 依赖
 
-- AI 每次生成的二维码空白块位置、大小都会有细微变化。
-- 手写坐标只能适配一张候选图。
-- 如果 AI 画了虚线框或占位文字，手写坐标和视觉框不一致时，二维码看起来就不居中。
+`requirements.txt` 增加：
 
-### 方案 2：提示词要求只留空白块
-
-后面调整了生图提示词：
-
-- 不让 AI 画虚线框。
-- 不让 AI 写“放置二维码”等占位字。
-- 只在左下角留一个干净白色方块，供真实二维码覆盖。
-
-这个方向是对的，因为减少了“视觉框”和脚本坐标不一致的问题。
-
-但如果仍然使用手写 `qr_box`，只要 AI 生成的白块稍有偏移，二维码仍会歪。
-
-### 方案 3：Pillow 自动识别白色空白块
-
-当前脚本已实现一个基础自动检测函数：
-
-```python
-detect_qr_blank_box(poster, search_region)
+```
+Pillow>=10.0.0
+numpy>=2.0.0
+pytest>=8.0.0
 ```
 
-位置：
+未引入 scipy / opencv，形态学用 PIL，连通域用纯 Python BFS（搜索区域 360×450 内可接受）。
 
-```text
-/Users/rongbo/Documents/New project 3/scripts/poster.py
-```
+## 未实施 / 可选后续
 
-核心逻辑：
+按重要性排：
 
-1. 先把 AI 候选图标准化成 `1080x1920`。
-2. 只搜索左下角区域，当前配置是：
-
-```json
-"qr_search_region": [0, 1450, 360, 1845]
-```
-
-3. 用 Pillow 遍历像素，筛选近白色、低饱和像素：
-
-```python
-red >= 210 and green >= 210 and blue >= 210
-max(red, green, blue) - min(red, green, blue) <= 45
-```
-
-4. 对白色像素做连通区域分析。
-5. 过滤候选白块：
-
-- 面积足够大。
-- 宽高不能太小。
-- 宽高比接近正方形：`0.75 <= aspect <= 1.35`。
-- 填充率足够高：`fill >= 0.65`。
-
-6. 选得分最高的白块作为二维码框。
-7. 检测失败时 fallback 到 `layout.qr_box`。
-
-当前 `finalize_ai()` 会打印实际使用的二维码框，例如：
-
-```text
-QR box: (54, 1592, 189, 184) (auto-detected)
-QR box: (74, 1618, 150, 150) (configured fallback)
-```
-
-### 当前检测结果
-
-对现有 3 张 `candidate-ai-clean-*` 的测试结果大致是：
-
-- `candidate-ai-clean-1.png`：能自动识别，约为 `(54, 1592, 189, 184)`。
-- `candidate-ai-clean-2.png`：能自动识别，但框高宽略不稳定，约为 `(58, 1591/1592, 203, 183/184)`。
-- `candidate-ai-clean-3.png`：自动识别失败，回退到手写坐标 `(74, 1618, 150, 150)`。
-
-## 当前问题
-
-现在的方法还不够鲁棒。用户肉眼观察后指出：第 2 张和第 3 张二维码空白块的比例其实一致，只是大小不同。
-
-当前算法只粗略考虑了“接近正方形”，没有充分利用这几个稳定特征：
-
-- 白块一定在底部蓝色信息栏的左侧。
-- 白块外圈应该被深蓝背景包围，而不是白色收益卡片或顶部 logo。
-- 白块本身应是一个整体的浅色圆角方块。
-- 第 2 张和第 3 张的白块比例一致，只是尺寸不同，所以检测后应该做正方形归一化，而不是直接使用原始连通区域宽高。
-
-因此，第 3 张失败并不代表思路错，而是当前评分条件太弱、后处理不够。
-
-## 不建议优先使用 GPT 识别坐标
-
-可以把三张图发给 GPT vision，让它返回二维码空白块坐标。GPT 对这种视觉定位通常能看懂。
-
-但不建议作为默认主流程，原因是：
-
-- 坐标不一定像本地算法一样可复现。
-- 每次 finalize 都要调用大模型，慢且有成本。
-- 需要额外处理模型坐标误差。
-- 这个问题本质是规则明确的图像处理任务，用 Pillow 就能做得稳定。
-
-更合理的方式：
-
-- 主流程用本地图像处理自动识别。
-- GPT vision 只作为调试手段，或在本地检测失败时辅助分析，而不是每张海报都调用。
-
-## 下一步推荐计划
-
-### 1. 增强候选白块评分
-
-当前只看白色连通块自身。下一版应增加“周围背景”判断：
-
-- 对候选白块向外扩展一个 ring，例如 12 到 20 px。
-- 统计 ring 里的深蓝像素比例。
-- 底部二维码空白块应该有较高的蓝色背景包围比例。
-- 顶部 logo、白色收益卡片、人物边缘等白色区域会被过滤掉。
-
-推荐蓝色判断可以先用简单条件：
-
-```python
-blue > red + 20
-blue > green + 5
-blue >= 90
-red <= 120
-```
-
-也可以结合深蓝条件：
-
-```python
-red < 80 and green < 140 and blue > 120
-```
-
-### 2. 检测后做正方形归一化
-
-不要直接使用连通区域的原始 `(w, h)`。
-
-推荐做法：
-
-1. 找到白块原始 bbox。
-2. 计算中心点：
-
-```python
-cx = left + width / 2
-cy = top + height / 2
-```
-
-3. 取统一边长：
-
-```python
-side = max(width, height)
-```
-
-4. 生成归一化方框：
-
-```python
-x = round(cx - side / 2)
-y = round(cy - side / 2)
-box = (x, y, side, side)
-```
-
-这样第 2/3 张“比例一致但大小不同”的情况会更稳定，二维码也更容易真正居中。
-
-### 3. 放宽和动态化搜索区域
-
-当前搜索区域是固定：
-
-```json
-[0, 1450, 360, 1845]
-```
-
-建议默认改成相对尺寸推导：
-
-```text
-left = 0
-top = 0.72 * poster_height
-right = 0.42 * poster_width
-bottom = 0.97 * poster_height
-```
-
-对 `1080x1920` 即约：
-
-```text
-[0, 1382, 454, 1862]
-```
-
-这样能覆盖不同候选图里略微移动的左下角二维码区。
-
-### 4. 增加 mask 形态学修复
-
-Pillow 不用 OpenCV 也可以做简单形态学。
-
-推荐对二值 mask 做一次轻量修复：
-
-```python
-from PIL import ImageFilter
-
-mask_image = mask_image.filter(ImageFilter.MaxFilter(5))
-mask_image = mask_image.filter(ImageFilter.MinFilter(5))
-```
-
-这样可以把白块里的轻微阴影、圆角渐变、抗锯齿导致的小断裂连起来。
-
-### 5. 输出 debug 图
-
-建议给 finalize 增加一个可选 debug 输出，例如：
-
-```text
-outputs/2026-05-10-meeting-872/qr-detection-debug-candidate-1.png
-```
-
-debug 图上画出：
-
-- 搜索区域。
-- 所有候选白块。
-- 最终选中的二维码框。
-
-这样之后调参数时不用靠猜。
-
-### 6. 保留 fallback
-
-即使自动检测增强后，也应该继续保留：
-
-```json
-"qr_box": [74, 1618, 150, 150]
-```
-
-自动检测失败时明确打印：
-
-```text
-QR box: (74, 1618, 150, 150) (configured fallback)
-```
-
-这样至少不会中断海报生成。
-
-## 推荐的实现顺序
-
-1. 在 `detect_qr_blank_box()` 中加入 blue-ring 背景评分。
-2. 返回前做正方形归一化。
-3. 把默认搜索区域改得更宽一点，或支持相对区域。
-4. 增加 debug 图输出。
-5. 用 3 张 `candidate-ai-clean-*` 分别跑 finalize，确认都能 auto-detect，不再 fallback。
-6. 最后再生成 `final-poster-ai-clean.png`。
+- **未做**：把 BFS 连通域也 numpy 化（如果后续把搜索区扩到全图，再考虑用 union-find 或 scipy.ndimage.label）。
+- **未做**：底部信息栏的自动定位（先扫描每行 brand-blue 占比突变点，再在信息栏内部找白块）。当前默认搜索区已经够用。
+- **未做**：debug 图里画 ring 区域。目前 ring 信息只通过 console 文本看到。
+- **可考虑**：在 `prepare` 阶段直接把 3 个 finalize 候选图都跑一遍并人眼比较，目前需要手动一张张来。
 
 ## 当前结论
 
-二维码贴图本身没有问题：它是 Pillow 直接贴图，不经过大模型。
+二维码贴图本身没有问题：Pillow 直接贴图，不经过大模型。
 
-真正需要优化的是“如何稳定找到 AI 预留的白色二维码空白块”。当前基础连通区域算法能跑通第 1 张，但第 2/3 张还不够稳。下一步应把“白块自身特征”升级为“白块 + 深蓝底部栏上下文 + 正方形归一化”的组合检测。
+二维码定位已从"基础连通域 + 单一 ring 假设"升级为：
+
+1. 列/行覆盖率重切 + `side = min(w, h)` 正方形归一化（防漏字撑高）；
+2. 通用 ring 一致性 + 高对比度（不预设颜色）；
+3. 纯白块直通路径（兼容无深色 ring 的海报）；
+4. 可选的 `qr_ring_color_hint` 仅作软加分项，不再是硬依赖。
+
+3 张候选图全部 auto-detected，pytest 通过，debug 图可供人工复核。下次新海报失败时优先看 debug 图调阈值，必要时可补充 fixture 锁定行为。

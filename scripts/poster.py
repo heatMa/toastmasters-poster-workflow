@@ -370,7 +370,7 @@ def detect_qr_blank_box(
     max_channel = arr.max(axis=2)
     raw_white = (min_channel >= 210) & ((max_channel - min_channel) <= 45)
 
-    mask_image = Image.fromarray((raw_white.astype(np.uint8) * 255), mode="L")
+    mask_image = Image.fromarray((raw_white.astype(np.uint8) * 255))
     closed_image = mask_image.filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.MinFilter(3))
     mask = np.asarray(closed_image) > 0
 
@@ -466,15 +466,35 @@ def detect_qr_blank_box(
         ring_luma = float(_luma(ring_median[None, :])[0])
         contrast = 255.0 - ring_luma
 
-        if consistency > 80.0:
-            continue
-        if contrast < 60.0:
+        ring_passes = consistency <= 150.0 and contrast >= 60.0
+
+        core_inset = max(8, side // 4)
+        cs_x0 = sx + core_inset
+        cs_y0 = sy + core_inset
+        cs_x1 = sx + side - core_inset
+        cs_y1 = sy + side - core_inset
+        if cs_x1 > cs_x0 and cs_y1 > cs_y0:
+            core_sample = arr[cs_y0:cs_y1, cs_x0:cs_x1]
+            core_min = float(core_sample.min())
+            core_median = float(np.median(core_sample))
+        else:
+            core_min = 0.0
+            core_median = 0.0
+        pure_white_block = (
+            core_median >= 245.0
+            and core_min >= 200.0
+            and fill >= 0.95
+            and side >= 140
+            and 0.8 <= (core_w / core_h) <= 1.25
+        )
+
+        if not ring_passes and not pure_white_block:
             continue
 
         square_score = 1.0 - abs(1.0 - (core_w / core_h))
         fill_score = min(fill, 1.0)
         size_score = min((side * side) / 40000.0, 1.0)
-        consistency_score = max(0.0, 1.0 - consistency / 80.0)
+        consistency_score = max(0.0, 1.0 - consistency / 150.0)
         contrast_score = min(contrast / 120.0, 1.0)
         hint_score = 0.0
         ring_hint_distance: float | None = None
@@ -487,9 +507,11 @@ def detect_qr_blank_box(
             square_score * 1.6
             + fill_score * 1.0
             + size_score * 0.8
-            + consistency_score * 1.4
-            + contrast_score * 1.2
+            + consistency_score * 1.0
+            + contrast_score * 1.0
             + hint_score * 0.4
+            + (2.0 if ring_passes else 0.0)
+            + (0.5 if pure_white_block else 0.0)
         )
 
         candidates.append(
@@ -504,6 +526,10 @@ def detect_qr_blank_box(
                 "contrast": contrast,
                 "ring_median": tuple(int(c) for c in ring_median),
                 "ring_hint_distance": ring_hint_distance,
+                "ring_passes": ring_passes,
+                "pure_white_block": pure_white_block,
+                "core_min": core_min,
+                "core_median": core_median,
                 "score_components": {
                     "square": square_score,
                     "fill": fill_score,
@@ -789,7 +815,7 @@ def finalize_ai(
 
     auto_detect = bool_from_layout(event, "qr_auto_detect", True)
     if auto_detect:
-        search_region = region_from_layout(event, "qr_search_region", [0, 1450, 360, 1845])
+        search_region = region_from_layout(event, "qr_search_region", [0, 1450, 360, 1900])
         ring_hint_rgb = _hex_to_rgb(layout.get("qr_ring_color_hint")) or _hex_to_rgb(
             event.get("style", {}).get("brand_color")
         )
