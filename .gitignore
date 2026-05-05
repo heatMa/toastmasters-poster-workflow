@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.DS_Store
+event.json
+outputs/*/candidate-*.png
+outputs/*/final-poster.png
+outputs/*/final-poster-ai.png
+outputs/*/final-poster-ai-clean-*.png
+outputs/*/qr-detection-debug-*.png
+outputs/*/preview-*.png

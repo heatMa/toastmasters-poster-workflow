@@ -1,0 +1,86 @@
+{
+  "slug": "2026-05-10-meeting-872",
+  "theme": "AI赋能演讲",
+  "subtitle": "用智能工具放大表达、故事与影响力",
+  "speaker": {
+    "name": "胡鹏飞",
+    "title": "LMI全方位领导力教练顾问",
+    "bio": "10+马龄、活力中文前主席、国学头马创始官员；2026年度O2小区中英文演讲比赛双冠王。"
+  },
+  "event": {
+    "time": "2026年5月10日 周日 14:00-17:00",
+    "location": "乌鲁木齐南路66号梧桐院邻里汇3号楼2楼（地铁1号线衡山路站4号口步行400米）",
+    "fee": "来宾35元 / 其他俱乐部会员25元 / 学生15元 / 角色免费"
+  },
+  "club": {
+    "name": "上海活力中文演讲俱乐部",
+    "meeting_number": "第872次会议",
+    "wechat_label": "扫码联系俱乐部"
+  },
+  "poster_copy": {
+    "reference_direction": "清爽蓝白科技培训海报，右侧主讲人肖像，左侧大标题，结构化嘉宾介绍，“你将收获”四项收益，底部深蓝信息栏，图标精致，间距充足，高级但清晰。",
+    "visual_direction": "让设计强关联“AI赋能演讲”：AI 视觉应服务于公众演讲、沟通表达、内容生成和影响力提升，不要变成泛科幻背景。",
+    "visual_keywords": [
+      "AI大脑线稿",
+      "电路线条",
+      "聊天气泡",
+      "麦克风",
+      "智能演示文稿",
+      "增长图表"
+    ],
+    "benefits": [
+      {
+        "title": "掌握AI工具",
+        "description": "高效生成演讲内容与PPT"
+      },
+      {
+        "title": "提升演讲力",
+        "description": "逻辑更清晰，表达更有力"
+      },
+      {
+        "title": "激发创造力",
+        "description": "拓展思维边界，让演讲更出彩"
+      },
+      {
+        "title": "拥抱未来",
+        "description": "与AI同行，成为更好的演讲者"
+      }
+    ],
+    "call_to_action": "扫码报名，一起开启表达之旅！",
+    "footer": "TOASTMASTERS 国际演讲俱乐部"
+  },
+  "assets": {
+    "speaker_photo": "assets/speakers/hu-pengfei.png",
+    "logo": "assets/brand/toastmasters-international-official.png",
+    "qr": "assets/qr/vibrant-wechat-qr.jpg"
+  },
+  "layout": {
+    "logo_mode": "ai",
+    "logo_background": false,
+    "logo_box": [
+      30,
+      28,
+      178,
+      150
+    ],
+    "qr_box": [
+      74,
+      1618,
+      150,
+      150
+    ],
+    "qr_auto_detect": true,
+    "qr_search_region": [
+      0,
+      1450,
+      360,
+      1845
+    ],
+    "qr_padding": 0
+  },
+  "style": {
+    "tone": "高端杂志感",
+    "accent_color": "#F2C76E",
+    "brand_color": "#004165"
+  }
+}

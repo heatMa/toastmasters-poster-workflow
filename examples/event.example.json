@@ -1,0 +1,78 @@
+{
+  "slug": "2026-05-10-meeting-123",
+  "theme": "把故事讲成影响力",
+  "subtitle": "A Toastmasters Evening of Voice and Leadership",
+  "speaker": {
+    "name": "张三",
+    "title": "资深演讲教练 / 企业培训师",
+    "bio": "用真实故事建立信任，让表达成为领导力。"
+  },
+  "event": {
+    "time": "2026年5月10日 周日 19:30-21:30",
+    "location": "上海市静安区 示例会议室",
+    "fee": "来宾35元 / 其他俱乐部会员25元 / 学生15元 / 角色免费"
+  },
+  "club": {
+    "name": "示例 Toastmasters 演讲俱乐部",
+    "meeting_number": "第 123 次会议",
+    "wechat_label": "扫码关注公众号"
+  },
+  "poster_copy": {
+    "reference_direction": "清爽蓝白的线下培训活动海报，右侧主讲人肖像，左侧大标题，中下部嘉宾介绍和“你将收获”模块，底部深蓝信息栏，留白充足，专业可信。",
+    "visual_direction": "围绕故事表达、影响力和领导力建立视觉隐喻，整体应温暖、清晰、有现场分享感。",
+    "visual_keywords": [
+      "故事线",
+      "聚光灯",
+      "演讲台",
+      "听众互动",
+      "影响力涟漪"
+    ],
+    "benefits": [
+      {
+        "title": "掌握表达结构",
+        "description": "让内容更清晰"
+      },
+      {
+        "title": "提升现场感染力",
+        "description": "让听众更投入"
+      },
+      {
+        "title": "获得即时反馈",
+        "description": "看见下一步成长点"
+      },
+      {
+        "title": "结识同频伙伴",
+        "description": "一起练习和成长"
+      }
+    ],
+    "call_to_action": "扫码报名，一起开启表达之旅！",
+    "footer": "TOASTMASTERS 国际演讲俱乐部"
+  },
+  "assets": {
+    "speaker_photo": "assets/speakers/speaker.jpg",
+    "logo": "assets/brand/toastmasters-logo.png",
+    "qr": "assets/qr/wechat-qr.png"
+  },
+  "layout": {
+    "logo_mode": "ai",
+    "logo_background": false,
+    "logo_box": [
+      52,
+      42,
+      295,
+      135
+    ],
+    "qr_box": [
+      72,
+      1652,
+      170,
+      170
+    ],
+    "qr_padding": 0
+  },
+  "style": {
+    "tone": "高端杂志感",
+    "accent_color": "#F2C76E",
+    "brand_color": "#004165"
+  }
+}
