@@ -1,0 +1,82 @@
+{
+  "slug": "2026-06-14-meeting-876",
+  "theme": "官员换届选举",
+  "subtitle": "",
+  "speaker": {
+    "name": "官员换届选举",
+    "title": "本次没有嘉宾分享",
+    "bio": "本次没有嘉宾分享。"
+  },
+  "event": {
+    "time": "2026年6月14日 周日 14:00-17:00",
+    "location": "乌鲁木齐南路66号梧桐院邻里汇3号楼2楼（地铁1号线衡山路站4号口步行400米）",
+    "fee": "来宾35元 / 其他俱乐部会员25元 / 学生15元 / 角色免费"
+  },
+  "club": {
+    "name": "上海活力中文演讲俱乐部",
+    "meeting_number": "第876次会议",
+    "wechat_label": "扫码联系俱乐部"
+  },
+  "poster_copy": {
+    "no_guest_share": true,
+    "show_event_format": false,
+    "show_benefits": false,
+    "reference_direction": "中文 Toastmasters 会议海报。无嘉宾分享只是制作约束，不要在海报上显示任何关于嘉宾有无的说明文字。不出现嘉宾照片、嘉宾介绍、分享嘉宾模块、单人主讲人模块、“你将收获”模块、收益列表或额外说明文案。海报主题只围绕“官员换届选举”。底部深蓝信息栏左侧保持一块安静的连续深蓝背景区域，不放文字、图标、外框或装饰面板，信息文字从右侧开始。整体正式、清晰、庄重、有组织感。",
+    "visual_direction": "围绕“官员换届选举”建立视觉隐喻：会议投票、选票、讲台、俱乐部治理、交接、秩序、责任。不要添加未提供的活动说明或候选人信息。",
+    "visual_keywords": [
+      "官员换届选举",
+      "投票",
+      "选票",
+      "讲台",
+      "俱乐部治理",
+      "交接"
+    ],
+    "call_to_action": "",
+    "footer": "TOASTMASTERS 国际演讲俱乐部"
+  },
+  "assets": {
+    "speaker_photo": "assets/speakers/eric-zhao-873-original.jpg",
+    "logo": "assets/brand/toastmasters-international-official.png",
+    "qr": "assets/qr/vibrant-wechat-qr.jpg"
+  },
+  "layout": {
+    "logo_mode": "ai",
+    "logo_background": false,
+    "logo_box": [
+      30,
+      28,
+      178,
+      150
+    ],
+    "qr_box": [
+      78,
+      1542,
+      144,
+      144
+    ],
+    "qr_auto_detect": false,
+    "qr_search_region": [
+      0,
+      1450,
+      360,
+      1900
+    ],
+    "qr_padding": 0,
+    "qr_vision": {
+      "enabled": false,
+      "model": "kimi-for-coding",
+      "base_url": "https://api.kimi.com/coding/",
+      "api_key_env": "KIMI_API_KEY",
+      "x_client": "claude-code",
+      "user_agent": "claude-code/1.0",
+      "timeout_seconds": 30,
+      "jpeg_quality": 85,
+      "max_tokens": 512
+    }
+  },
+  "style": {
+    "tone": "正式、清晰、庄重、有组织感",
+    "accent_color": "#D7A64A",
+    "brand_color": "#004165"
+  }
+}

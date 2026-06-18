@@ -125,7 +125,8 @@ def check_assets(event: dict[str, Any], root: Path, strict: bool) -> list[str]:
 def content_warnings(event: dict[str, Any]) -> list[str]:
     poster_copy = event.get("poster_copy", {})
     warnings = []
-    if not poster_copy.get("benefits"):
+    show_benefits = bool(poster_copy.get("show_benefits", True))
+    if show_benefits and not poster_copy.get("benefits"):
         warnings.append("poster_copy.benefits is missing; add this event's specific \"你将收获\" items")
     if not poster_copy.get("visual_keywords"):
         warnings.append("poster_copy.visual_keywords is missing; prompt will use generic theme-related visual metaphors")
@@ -181,55 +182,157 @@ def prompt_variants(event: dict[str, Any]) -> list[tuple[str, str]]:
     )
     call_to_action = poster_copy.get("call_to_action", "扫码报名，一起开启表达之旅！")
     footer = poster_copy.get("footer", "TOASTMASTERS 国际演讲俱乐部")
+    no_guest_share = bool(poster_copy.get("no_guest_share", False))
+    show_benefits = bool(poster_copy.get("show_benefits", True))
+    show_speaker_bio = bool(poster_copy.get("show_speaker_bio", True))
+    show_event_format = bool(poster_copy.get("show_event_format", True))
+    qr_auto_detect = bool_from_layout(event, "qr_auto_detect", True)
+    qr_instruction = (
+        "In the lower-left event bar, reserve one clean blank white square area "
+        "for a real QR code overlay; do not draw a dashed frame, do not draw a "
+        "fake QR, and do not write placeholder words such as “放置二维码” inside "
+        "that blank square."
+        if qr_auto_detect
+        else "Keep the lower-left part of the event bar as normal continuous "
+        "deep-blue background texture. Leave that area visually quiet and free "
+        "of text, icons, outlines, containers, labels, or decorative panels. "
+        "Start the time, location, fee, and action text to the right of that "
+        "quiet area."
+    )
+    hard_constraints = (
+        "no extra people, no distorted face, no fake QR code, no dashed QR "
+        "placeholder frame, no QR placeholder text, no watermark, no random "
+        "unreadable text, no unrelated icons."
+        if qr_auto_detect
+        else "no extra people, no distorted face, no scannable code or "
+        "code-like pattern, no watermark, no random unreadable text, no "
+        "unrelated icons, no outlines or containers in the lower-left event "
+        "bar."
+    )
+    input_image_instruction = (
+        "Do not use a speaker portrait or single featured guest. Build the main "
+        "visual from the configured event theme and visual keywords only."
+        if no_guest_share
+        else "Use the provided speaker portrait as the main person with high "
+        "photo fidelity. Preserve the original face, facial proportions, "
+        "hairstyle, skin tone, expression, clothing, and body posture as closely "
+        "as possible. Do not redraw or beautify the person into a different "
+        "identity; only remove the original background and integrate the cut-out "
+        "into the poster design. Keep one person only."
+    )
+    if no_guest_share and show_event_format:
+        speaker_copy = (
+            f"- 本场形式: {speaker['name']}\n"
+            f"- 会议说明: {speaker['bio']}"
+        )
+    elif no_guest_share:
+        speaker_copy = ""
+    elif show_speaker_bio:
+        speaker_copy = (
+            f"- 分享嘉宾: {speaker['name']}\n"
+            f"- 嘉宾身份: {speaker['title']}\n"
+            f"- 嘉宾介绍: {speaker['bio']}"
+        )
+    else:
+        speaker_copy = (
+            f"- 分享嘉宾: {speaker['name']}\n"
+            f"- 嘉宾身份: {speaker['title']}"
+        )
+    benefits_copy = (
+        f"- 你将收获:\n{benefits_text}"
+        if show_benefits
+        else ""
+    )
+    subtitle_copy = f"- 副标题: {subtitle}" if subtitle else ""
+    call_to_action_copy = f"- 行动语: {call_to_action}" if call_to_action else ""
+    footer_copy = f"- 页脚: {footer}" if footer else ""
     base = f"""
 Use case: ads-marketing
 Asset type: complete 1080x1920 vertical Chinese mobile poster for WeChat sharing
 Primary request: Design a polished, complete Toastmasters event poster in Chinese. The poster must feel more like a finished premium training/event poster than a background template.
+Content discipline: Use only the exact event text provided below. Do not add unprovided sections, benefits, course outcomes, guest biography, slogans, or explanatory copy.
 Reference direction: {reference_direction}
-Input image: Use the provided speaker portrait as the main person. Preserve recognizable facial structure, hairstyle, age, and professional business presence. Keep one person only.
-Official brand/QR handling: You may create a polished Toastmasters-style top brand area and icon as part of the complete poster. Do not create any QR code. In the lower-left event bar, reserve one clean blank white square area for a real QR code overlay; do not draw a dashed frame, do not draw a fake QR, and do not write placeholder words such as “放置二维码” inside that blank square.
+Input image: {input_image_instruction}
+Official brand/QR handling: You may create a polished Toastmasters-style top brand area and icon as part of the complete poster. Do not create any QR code. {qr_instruction}
 Top header layout: Put the Toastmasters-style icon on the top-left. Put “{club["name"]} / {club["meeting_number"]}” directly to the right of that icon in the same compact header row or header area. Do not add a separate English brand slogan or generic Chinese tagline; the icon already communicates the Toastmasters brand. Do not repeat the club name and meeting number again above the main title.
 Exact Chinese copy to include:
 - 顶部品牌行: {club["name"]} / {club["meeting_number"]}
 - 主标题: {theme}
-- 副标题: {subtitle}
-- 分享嘉宾: {speaker["name"]}
-- 嘉宾身份: {speaker["title"]}
-- 嘉宾介绍: {speaker["bio"]}
-- 你将收获:
-{benefits_text}
+{subtitle_copy}
+{speaker_copy}
+{benefits_copy}
 - 时间: {event_info["time"]}
 - 地点: {event_info["location"]}
 - 费用: {event_info.get("fee", "")}
-- 行动语: {call_to_action}
-- 页脚: {footer}
+{call_to_action_copy}
+{footer_copy}
 Theme visual direction: {visual_direction}
 Theme visual keywords: {visual_keywords}
 Typography: Chinese text must be readable, high-contrast, and professionally aligned. Use bold dark-blue title typography, smaller clean body text, consistent spacing, no chaotic text blocks.
-Hard constraints: no extra people, no distorted face, no fake QR code, no dashed QR placeholder frame, no QR placeholder text, no watermark, no random unreadable text, no unrelated icons.
+Hard constraints: {hard_constraints}
 """
+    info_block_description = (
+        "compact guest name-and-title block"
+        if not show_speaker_bio
+        else "structured guest intro"
+    )
+    content_block_description = (
+        "four benefit cards"
+        if show_benefits
+        else "open visual breathing room with theme-related cards and dialogue imagery, no benefit list"
+    )
+    clean_composition = (
+        "Composition: Clean event-program poster. Light blue-white main area, "
+        "large left-side title, central visual metaphor for this event theme, "
+        "structured event format block, bottom deep-blue event bar."
+        if no_guest_share
+        else "Composition: Closest to the provided reference poster. Light "
+        "blue-white gradient, right-side full-height speaker, left-side large "
+        f"title, mid-lower {info_block_description}, {content_block_description}, "
+        "bottom deep-blue event bar."
+    )
+    premium_composition = (
+        "Composition: More premium editorial and spacious. Keep a refined light "
+        "background, strong event-theme visual presence, large title, and "
+        "elegant theme-related visual metaphors. Information hierarchy must "
+        "remain very clear."
+        if no_guest_share
+        else "Composition: More premium editorial and spacious. Keep a refined "
+        "light background, strong portrait presence, large title, and elegant "
+        "theme-related visual metaphors. Information hierarchy must remain very "
+        "clear."
+    )
+    expressive_composition = (
+        "Composition: Stronger theme expression. Add tasteful visual elements "
+        "from the configured theme keywords around the title and program blocks, "
+        "while preserving readable blocks for all event copy."
+        if no_guest_share
+        else "Composition: Stronger theme expression. Add tasteful visual "
+        "elements from the configured theme keywords around the speaker, while "
+        "preserving readable blocks for all event copy."
+    )
     variants = [
         (
             "candidate-ai-clean-1 清爽培训海报",
             base
-            + """
-Composition: Closest to the provided reference poster. Light blue-white gradient, right-side full-height speaker, left-side large title, mid-lower guest intro, four benefit cards, bottom deep-blue event bar.
+            + f"""
+{clean_composition}
 Mood: clean, bright, credible, inviting, high-end public training poster.
 """,
         ),
         (
             "candidate-ai-clean-2 高级杂志感完整海报",
             base
-            + """
-Composition: More premium editorial and spacious. Keep a refined light background, strong portrait presence, large title, and elegant theme-related visual metaphors. Information hierarchy must remain very clear.
+            + f"""
+{premium_composition}
 Mood: executive, premium, modern, polished, still readable on mobile.
 """,
         ),
         (
             "candidate-ai-clean-3 强主题传播吸睛版",
             base
-            + """
-Composition: Stronger theme expression. Add tasteful visual elements from the configured theme keywords around the speaker, while preserving readable blocks for all event copy.
+            + f"""
+{expressive_composition}
 Mood: memorable, energetic, intelligent, premium, optimized for attracting attention in WeChat feeds.
 """,
         ),

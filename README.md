@@ -4,9 +4,10 @@
 
 核心原则：
 
-- ChatGPT image2 / 生图工具直接生成完整中文海报设计，包括主题、嘉宾介绍、收益模块、时间地点和费用信息。
+- ChatGPT image2 / 生图工具直接生成完整中文海报设计，但海报正文只能使用用户明确提供或确认的信息；不得自行补充“你将收获”、课程收益、嘉宾介绍、行动语或其他未提供文案。
 - 官方 Toastmasters Logo 和二维码不交给 AI 仿制，最后由本地脚本覆盖真实素材。
 - 每期默认先生成 3 个完整海报候选，再选 1 个进行最终落版。
+- 有嘉宾照片时，生图提示词必须明确要求尽量保持原始照片：不重画五官、脸型、发型、肤色、服装和姿态，只允许抠图、换背景和适度融入版式。
 
 ## 目录
 
@@ -101,7 +102,7 @@ python scripts/poster.py compose --event events/<新会议>.json --candidate 1
 - `poster_copy.reference_direction`：固定版式/风格参考，例如“清爽蓝白培训海报、右侧主讲人肖像、底部深蓝信息栏”。
 - `poster_copy.visual_direction`：本期整体视觉方向，例如主题应传达什么气质、避免什么误区。
 - `poster_copy.visual_keywords`：本期视觉关键词，例如图形隐喻、图标、场景元素。
-- `poster_copy.benefits`：海报“你将收获”模块。建议每期都填写；缺失时 `prepare` 会提醒。
+- `poster_copy.benefits`：仅当用户明确提供“你将收获”或收益点时填写；没有提供时不要编造，也不要在海报中生成该模块。
 - `poster_copy.call_to_action`：扫码报名行动语。
 - `layout.logo_mode`：默认 `ai`，保留生图生成的顶部品牌区；设置为 `official_overlay` 时才覆盖官方 Logo。
 - `layout.logo_box`：最终覆盖官方 Logo 的位置，格式为 `[x, y, width, height]`。
@@ -113,6 +114,8 @@ python scripts/poster.py compose --event events/<新会议>.json --candidate 1
 最终交付前检查：
 
 - AI 生成的中文文字无错字、无缺字。
+- 海报中没有出现用户未提供或未确认的信息，尤其是“你将收获”、课程收益、嘉宾介绍、行动语等容易被模型补全的内容。
+- 嘉宾照片尽量接近原始照片，不应明显改变五官、脸型、发型、服装或气质。
 - 二维码清晰且可扫码。
 - 二维码来自原始素材，AI 候选里只应留干净空白区，不应有虚线框或占位字。
 - Logo 默认使用 AI 生成的整体品牌区；如需官方严谨版本，再用 `logo_mode: official_overlay`。

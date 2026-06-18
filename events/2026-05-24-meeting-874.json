@@ -1,0 +1,98 @@
+{
+  "slug": "2026-05-24-meeting-874",
+  "theme": "备稿马拉松",
+  "subtitle": "一场接一场，把表达练扎实",
+  "speaker": {
+    "name": "备稿演讲专场",
+    "title": "多位会员备稿演讲",
+    "bio": "本场不设嘉宾分享，聚焦会员备稿演讲。"
+  },
+  "event": {
+    "time": "2026年5月24日 周日 14:00-17:00",
+    "location": "乌鲁木齐南路66号梧桐院邻里汇3号楼2楼（地铁1号线衡山路站4号口步行400米）",
+    "fee": "来宾35元 / 其他俱乐部会员25元 / 学生15元 / 角色免费"
+  },
+  "club": {
+    "name": "上海活力中文演讲俱乐部",
+    "meeting_number": "第874次会议",
+    "wechat_label": "扫码联系俱乐部"
+  },
+  "poster_copy": {
+    "no_guest_share": true,
+    "reference_direction": "中文 Toastmasters 会议海报。本期没有嘉宾分享，不出现嘉宾照片、嘉宾介绍或单人主讲人模块。主视觉围绕备稿演讲专场与马拉松节奏，底部深蓝信息栏左侧保持一块安静的连续深蓝背景区域，不放文字、图标、外框或装饰面板，信息文字从右侧开始。整体清晰、热烈、有行动感。",
+    "visual_direction": "围绕“备稿马拉松”建立视觉隐喻：跑道、接力节奏、演讲舞台、麦克风、讲台、计时器、连续上场练习。不要体现具体演讲篇数。",
+    "visual_keywords": [
+      "备稿马拉松",
+      "演讲舞台",
+      "跑道节奏",
+      "麦克风",
+      "连续练习",
+      "会员备稿演讲"
+    ],
+    "benefits": [
+      {
+        "title": "持续上场练习",
+        "description": "把备稿讲完整"
+      },
+      {
+        "title": "现场听见反馈",
+        "description": "找到下一次打磨方向"
+      },
+      {
+        "title": "观察不同风格",
+        "description": "从多场演讲里学习"
+      },
+      {
+        "title": "把准备变成表达",
+        "description": "让内容真正落地"
+      }
+    ],
+    "call_to_action": "扫码报名，一起跑完这场备稿马拉松！",
+    "footer": "TOASTMASTERS 国际演讲俱乐部"
+  },
+  "assets": {
+    "speaker_photo": "assets/speakers/eric-zhao-873-original.jpg",
+    "logo": "assets/brand/toastmasters-international-official.png",
+    "qr": "assets/qr/vibrant-wechat-qr.jpg"
+  },
+  "layout": {
+    "logo_mode": "ai",
+    "logo_background": false,
+    "logo_box": [
+      30,
+      28,
+      178,
+      150
+    ],
+    "qr_box": [
+      78,
+      1542,
+      144,
+      144
+    ],
+    "qr_auto_detect": false,
+    "qr_search_region": [
+      0,
+      1450,
+      360,
+      1900
+    ],
+    "qr_padding": 0,
+    "qr_vision": {
+      "enabled": false,
+      "model": "kimi-for-coding",
+      "base_url": "https://api.kimi.com/coding/",
+      "api_key_env": "KIMI_API_KEY",
+      "x_client": "claude-code",
+      "user_agent": "claude-code/1.0",
+      "timeout_seconds": 30,
+      "jpeg_quality": 85,
+      "max_tokens": 512
+    }
+  },
+  "style": {
+    "tone": "热烈、清晰、有行动感",
+    "accent_color": "#D7A64A",
+    "brand_color": "#004165"
+  }
+}

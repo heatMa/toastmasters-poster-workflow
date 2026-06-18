@@ -1,0 +1,81 @@
+{
+  "slug": "2026-06-07-meeting-875",
+  "theme": "翻牌时刻：和你的拖延症聊聊天",
+  "subtitle": "",
+  "speaker": {
+    "name": "Cindy Zhang",
+    "title": "双语潜意识卡牌带领师 / 个人成长教练",
+    "bio": "双语潜意识卡牌带领师，个人成长教练。"
+  },
+  "event": {
+    "time": "2026年6月7日 周日 14:00-17:00",
+    "location": "乌鲁木齐南路66号梧桐院邻里汇3号楼2楼（地铁1号线衡山路站4号口步行400米）",
+    "fee": "来宾35元 / 其他俱乐部会员25元 / 学生15元 / 角色免费"
+  },
+  "club": {
+    "name": "上海活力中文演讲俱乐部",
+    "meeting_number": "第875次会议",
+    "wechat_label": "扫码联系俱乐部"
+  },
+  "poster_copy": {
+    "show_benefits": false,
+    "show_speaker_bio": false,
+    "reference_direction": "中文 Toastmasters 嘉宾分享海报，使用 Cindy Zhang 的照片作为主视觉，去掉原照片里的纯灰背景，保留人物干净专业的白色西装形象。必须尽量保持原始照片中的五官、脸型、发型、肤色、白色西装和姿态，不要重画成另一个人。不要出现副标题、“你将收获”模块、收益列表、课程要点列表或额外说明文案。嘉宾信息只出现一次：姓名和身份即可，不再重复嘉宾介绍。底部深蓝信息栏左侧保持一块安静的连续深蓝背景区域，不放文字、图标、外框或装饰面板，信息文字从右侧开始。整体温柔、清晰、专业，有一点神秘感但不要玄学化。",
+    "visual_direction": "围绕“翻牌时刻：和你的拖延症聊聊天”建立视觉隐喻：卡牌翻开、内在对话、时间沙漏、待办清单、行动按钮、轻柔光晕。画面要像一场个人成长工作坊，而不是硬核商业讲座。",
+    "visual_keywords": [
+      "潜意识卡牌",
+      "翻牌时刻",
+      "拖延症",
+      "内在对话",
+      "个人成长",
+      "行动启动"
+    ],
+    "call_to_action": "扫码报名，和拖延症好好聊聊！",
+    "footer": "TOASTMASTERS 国际演讲俱乐部"
+  },
+  "assets": {
+    "speaker_photo": "assets/speakers/cindy-zhang-875.png",
+    "logo": "assets/brand/toastmasters-international-official.png",
+    "qr": "assets/qr/vibrant-wechat-qr.jpg"
+  },
+  "layout": {
+    "logo_mode": "ai",
+    "logo_background": false,
+    "logo_box": [
+      30,
+      28,
+      178,
+      150
+    ],
+    "qr_box": [
+      78,
+      1542,
+      144,
+      144
+    ],
+    "qr_auto_detect": false,
+    "qr_search_region": [
+      0,
+      1450,
+      360,
+      1900
+    ],
+    "qr_padding": 0,
+    "qr_vision": {
+      "enabled": false,
+      "model": "kimi-for-coding",
+      "base_url": "https://api.kimi.com/coding/",
+      "api_key_env": "KIMI_API_KEY",
+      "x_client": "claude-code",
+      "user_agent": "claude-code/1.0",
+      "timeout_seconds": 30,
+      "jpeg_quality": 85,
+      "max_tokens": 512
+    }
+  },
+  "style": {
+    "tone": "温柔、清晰、专业、带一点神秘感",
+    "accent_color": "#D7A64A",
+    "brand_color": "#004165"
+  }
+}

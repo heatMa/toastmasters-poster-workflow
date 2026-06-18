@@ -1,0 +1,97 @@
+{
+  "slug": "2026-05-17-meeting-873",
+  "theme": "职场中的关键时刻",
+  "subtitle": "看见转折点，把握下一步",
+  "speaker": {
+    "name": "Eric赵",
+    "title": "会计师事务所合伙人",
+    "bio": "Lighthouse俱乐部，会计师事务所合伙人。"
+  },
+  "event": {
+    "time": "2026年5月17日 周日 14:00-17:00",
+    "location": "乌鲁木齐南路66号梧桐院邻里汇3号楼2楼（地铁1号线衡山路站4号口步行400米）",
+    "fee": "来宾35元 / 其他俱乐部会员25元 / 学生15元 / 角色免费"
+  },
+  "club": {
+    "name": "Lighthouse俱乐部",
+    "meeting_number": "第873次会议",
+    "wechat_label": "扫码联系俱乐部"
+  },
+  "poster_copy": {
+    "reference_direction": "专业职场分享海报，使用嘉宾照片抠出人物作为主视觉，去掉原照片里的会议室背景。左侧大标题，中部嘉宾身份，底部深蓝信息栏，右下方预留干净白色二维码方块，整体简洁、可信、有商务质感。",
+    "visual_direction": "围绕“职场中的关键时刻”建立视觉隐喻：会议桌、决策节点、时间刻度、路径选择、聚光灯与稳健表达。避免泛科技炫光，保持成熟商务、清晰有力。",
+    "visual_keywords": [
+      "职场关键时刻",
+      "决策节点",
+      "会议表达",
+      "职业转折",
+      "路径选择",
+      "商务聚光灯"
+    ],
+    "benefits": [
+      {
+        "title": "识别关键时刻",
+        "description": "看清职场转折点"
+      },
+      {
+        "title": "提升判断力",
+        "description": "在压力中做选择"
+      },
+      {
+        "title": "关键沟通",
+        "description": "把观点表达清楚"
+      },
+      {
+        "title": "稳住下一步",
+        "description": "把经验变成行动"
+      }
+    ],
+    "call_to_action": "扫码报名，把握职场关键时刻！",
+    "footer": "TOASTMASTERS 国际演讲俱乐部"
+  },
+  "assets": {
+    "speaker_photo": "assets/speakers/eric-zhao-873-original.jpg",
+    "logo": "assets/brand/toastmasters-international-official.png",
+    "qr": "assets/qr/vibrant-wechat-qr.jpg"
+  },
+  "layout": {
+    "logo_mode": "ai",
+    "logo_background": false,
+    "logo_box": [
+      30,
+      28,
+      178,
+      150
+    ],
+    "qr_box": [
+      74,
+      1618,
+      150,
+      150
+    ],
+    "qr_auto_detect": true,
+    "qr_search_region": [
+      0,
+      1450,
+      360,
+      1900
+    ],
+    "qr_padding": 0,
+    "qr_vision": {
+      "enabled": true,
+      "model": "kimi-for-coding",
+      "base_url": "https://api.kimi.com/coding/",
+      "api_key_env": "KIMI_API_KEY",
+      "x_client": "claude-code",
+      "user_agent": "claude-code/1.0",
+      "timeout_seconds": 30,
+      "jpeg_quality": 85,
+      "max_tokens": 512
+    }
+  },
+  "style": {
+    "tone": "成熟商务、清晰有力",
+    "accent_color": "#D7A64A",
+    "brand_color": "#004165"
+  }
+}
