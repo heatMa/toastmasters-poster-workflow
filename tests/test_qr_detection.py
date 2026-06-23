@@ -5,7 +5,7 @@ Each candidate image bakes in a specific failure mode the detector must handle:
   candidate-2: QR blank surrounded by gradient-blue info bar (ring path,
                permissive consistency)
   candidate-3: no deep ring -- QR area sits on a light background
-               (pure-white-block fallback path)
+               (pure-white-block alternate detector path)
 
 Expected centers / sides were verified visually after the new detector
 landed; tolerances allow for minor algorithmic drift but flag real

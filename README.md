@@ -4,7 +4,8 @@
 
 核心原则：
 
-- ChatGPT image2 / 生图工具直接生成完整中文海报设计，但海报正文只能使用用户明确提供或确认的信息；不得自行补充“你将收获”、课程收益、嘉宾介绍、行动语或其他未提供文案。
+- ChatGPT image2 / Codex 内置 GPT Image 能力直接生成完整中文海报设计，但海报正文只能使用用户明确提供或确认的信息；不得自行补充“你将收获”、课程收益、嘉宾介绍、行动语或其他未提供文案。
+- 当用户在 Codex 对话框里提供本期主题、日期、嘉宾、嘉宾介绍和图片并要求“生成海报”时，Codex 必须直接调用 GPT Image 生成候选图；不得使用本地 Pillow/HTML/CSS/SVG 重新排版整张海报。
 - 官方 Toastmasters Logo 和二维码不交给 AI 仿制，最后由本地脚本覆盖真实素材。
 - 每期默认先生成 3 个完整海报候选，再选 1 个进行最终落版。
 - 有嘉宾照片时，生图提示词必须明确要求尽量保持原始照片：不重画五官、脸型、发型、肤色、服装和姿态，只允许抠图、换背景和适度融入版式。
@@ -25,7 +26,6 @@ outputs/
     candidate-ai-clean-2.png
     candidate-ai-clean-3.png
     final-poster-ai-clean.png
-    final-poster.png   # 旧版 fallback 流程产物
 scripts/
   poster.py
 ```
@@ -56,7 +56,7 @@ cp examples/event.example.json events/<新会议>.json
 python scripts/poster.py prepare --event events/<新会议>.json
 ```
 
-这会创建 `outputs/<slug>/prompt.md`。把其中 3 条提示词分别交给 ChatGPT image2 / 生图工具生成完整中文海报候选，并保存为：
+这会创建 `outputs/<slug>/prompt.md`。如果是在 Codex 对话里制作海报，Codex 应直接调用 GPT Image 生成完整中文海报候选，并保存为：
 
 ```text
 outputs/<slug>/candidate-ai-clean-1.png
@@ -74,12 +74,6 @@ python scripts/poster.py finalize --event events/<新会议>.json --candidate 1
 
 ```text
 outputs/<slug>/final-poster-ai-clean.png
-```
-
-如果 AI 中文排版效果不稳定，仍可使用旧版 fallback：
-
-```bash
-python scripts/poster.py compose --event events/<新会议>.json --candidate 1
 ```
 
 ## 输入配置

@@ -1,0 +1,66 @@
+{
+  "slug": "2026-06-28-meeting-877",
+  "theme": "解码好声音",
+  "subtitle": "",
+  "speaker": {
+    "name": "Helen",
+    "title": "原省级电台主持人 / AACTP注册培训师 / 英国谢菲尔德大学硕士",
+    "bio": "《解码好声音》版权课程讲师"
+  },
+  "event": {
+    "time": "2026年6月28日 周日 14:00-17:00",
+    "location": "乌鲁木齐南路66号梧桐院邻里汇3号楼2楼",
+    "fee": "来宾35元 / 其他俱乐部会员25元 / 学生15元 / 角色免费"
+  },
+  "club": {
+    "name": "上海活力中文演讲俱乐部",
+    "meeting_number": "第877次会议",
+    "wechat_label": "扫码联系俱乐部"
+  },
+  "poster_copy": {
+    "reference_direction": "中文 Toastmasters 会议海报。主题围绕声音训练、公众表达、麦克风、声波、专业培训。使用嘉宾 Helen 的照片作为主视觉，明亮、专业、可信、适合微信传播。",
+    "visual_direction": "围绕“解码好声音”建立视觉隐喻：麦克风、声波、音频频谱、表达训练、舞台沟通。",
+    "visual_keywords": [
+      "好声音",
+      "麦克风",
+      "声波",
+      "表达训练",
+      "公众演讲"
+    ],
+    "benefits": [
+      "怎样算好声音？",
+      "为什么要有好声音？",
+      "怎样修炼好声音？"
+    ],
+    "call_to_action": "",
+    "footer": "TOASTMASTERS 国际演讲俱乐部"
+  },
+  "assets": {
+    "speaker_photo": "assets/speakers/helen-877.jpg",
+    "logo": "assets/brand/toastmasters-international-official.png",
+    "qr": "assets/qr/vibrant-wechat-qr.jpg"
+  },
+  "layout": {
+    "logo_mode": "official_overlay",
+    "logo_background": true,
+    "logo_box": [
+      42,
+      46,
+      178,
+      156
+    ],
+    "qr_box": [
+      54,
+      1572,
+      210,
+      210
+    ],
+    "qr_auto_detect": false,
+    "qr_padding": 8
+  },
+  "style": {
+    "tone": "明亮、专业、可信、有活力",
+    "accent_color": "#C9972D",
+    "brand_color": "#004165"
+  }
+}

@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A workflow tool for producing weekly Toastmasters meeting posters (1080x1920 vertical PNG for WeChat). The pipeline: configure event JSON → generate image-generation prompts → send prompts to ChatGPT image2 / AI image tools → overlay real QR code (and optionally official logo) onto the AI-generated poster.
+A workflow tool for producing weekly Toastmasters meeting posters (1080x1920 vertical PNG for WeChat). The pipeline: configure event JSON → generate image-generation prompts → call Codex/GPT Image to create AI poster candidates → overlay real QR code (and optionally official logo) onto the AI-generated poster.
+
+## Agent Conversation Rule
+
+When the user provides a meeting theme, date, speaker, speaker bio, and speaker image in chat and asks to generate a poster, the agent MUST directly call the available image generation capability to create the main poster candidate. Do not create the main poster locally with Pillow, HTML/CSS, SVG, canvas, or deterministic layout code. Local scripts are only for preparing prompts, saving AI candidates into `outputs/<slug>/`, and overlaying real QR/logo assets.
 
 ## Commands
 
@@ -17,25 +21,21 @@ python scripts/poster.py prepare --event events/<slug>.json
 
 # Overlay real logo + QR onto AI-generated poster (primary flow)
 python scripts/poster.py finalize --event events/<slug>.json --candidate 1
-
-# Legacy fallback: full local composition with gradient overlay and text layout
-python scripts/poster.py compose --event events/<slug>.json --candidate 1
 ```
 
 ## Architecture
 
-Single script (`scripts/poster.py`) with three subcommands:
+Single script (`scripts/poster.py`) with two subcommands:
 
 - **prepare**: Reads event JSON → generates `outputs/<slug>/prompt.md` containing 3 prompt variants (clean training poster, premium editorial, attention-grabbing). Each variant shares a common base prompt built from `poster_copy` fields.
 - **finalize**: Takes an AI-generated full poster (`candidate-ai-clean-N.png`), auto-detects the blank QR region via flood-fill heuristics (`detect_qr_blank_box`), then pastes the real QR image. Optionally overlays official logo if `layout.logo_mode` is `official_overlay`.
-- **compose**: Legacy path that builds the entire poster locally — gradient overlay, text layout, logo, QR — from a background candidate image. Uses system CJK fonts (PingFang, Hiragino, Noto).
 
 ## Key Design Decisions
 
 - Event configuration drives everything: theme, copy, visual direction, layout coordinates, and asset paths all live in `events/<slug>.json`. The script itself should not need per-event changes.
 - AI handles Chinese typography and brand area by default (`logo_mode: ai`). Only QR is mechanically overlaid to avoid AI-generated fake QR codes.
 - `qr_auto_detect: true` uses pixel-based flood-fill to find the blank white square left by the AI in the lower-left region, falling back to `qr_box` coordinates if detection fails.
-- Candidate naming: `candidate-ai-clean-{1,2,3}.png` for AI-generated full posters; `candidate-{1,2,3}.png` for raw backgrounds used in the legacy compose path.
+- Candidate naming: `candidate-ai-clean-{1,2,3}.png` for AI-generated full posters.
 
 ## Event JSON Structure
 

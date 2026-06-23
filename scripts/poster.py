@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare image prompts and compose Toastmasters mobile posters."""
+"""Prepare image prompts and finalize AI-generated Toastmasters mobile posters."""
 
 from __future__ import annotations
 
@@ -20,17 +20,12 @@ from qr_vision import detect_qr_box_with_vision
 
 
 POSTER_SIZE = (1080, 1920)
-DEFAULT_ACCENT = "#F2C76E"
-DEFAULT_BRAND = "#004165"
-
 
 @dataclass(frozen=True)
 class EventPaths:
     root: Path
     output_dir: Path
     prompt_file: Path
-    final_file: Path
-    ai_final_file: Path
     ai_clean_final_file: Path
 
 
@@ -83,8 +78,6 @@ def event_paths(event: dict[str, Any]) -> EventPaths:
         root=root,
         output_dir=output_dir,
         prompt_file=output_dir / "prompt.md",
-        final_file=output_dir / "final-poster.png",
-        ai_final_file=output_dir / "final-poster-ai.png",
         ai_clean_final_file=output_dir / "final-poster-ai-clean.png",
     )
 
@@ -388,13 +381,6 @@ def find_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFo
     return ImageFont.load_default()
 
 
-def hex_to_rgba(value: str, alpha: int = 255) -> tuple[int, int, int, int]:
-    value = value.strip().lstrip("#")
-    if len(value) != 6:
-        value = DEFAULT_ACCENT.lstrip("#")
-    return (int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16), alpha)
-
-
 def cover_image(image: Image.Image, size: tuple[int, int]) -> Image.Image:
     return ImageOps.fit(image.convert("RGB"), size, method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
 
@@ -689,167 +675,6 @@ def bool_from_layout(event: dict[str, Any], key: str, default: bool = False) -> 
     return bool(value)
 
 
-def draw_gradient_overlay(base: Image.Image) -> Image.Image:
-    width, height = base.size
-    overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
-    pixels = overlay.load()
-    for y in range(height):
-        top_alpha = int(max(0, 120 - y * 0.22))
-        bottom_start = int(height * 0.52)
-        bottom_alpha = int(210 * max(0, (y - bottom_start) / (height - bottom_start)))
-        alpha = max(top_alpha, bottom_alpha)
-        for x in range(width):
-            pixels[x, y] = (0, 0, 0, alpha)
-    return Image.alpha_composite(base.convert("RGBA"), overlay)
-
-
-def text_width(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont) -> int:
-    bbox = draw.textbbox((0, 0), text, font=font)
-    return bbox[2] - bbox[0]
-
-
-def wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, max_width: int) -> list[str]:
-    if not text:
-        return []
-    lines: list[str] = []
-    current = ""
-    for char in text:
-        candidate = current + char
-        if char == "\n":
-            lines.append(current)
-            current = ""
-        elif text_width(draw, candidate, font) <= max_width or not current:
-            current = candidate
-        else:
-            lines.append(current)
-            current = char
-    if current:
-        lines.append(current)
-    return lines
-
-
-def draw_text_block(
-    draw: ImageDraw.ImageDraw,
-    xy: tuple[int, int],
-    text: str,
-    font: ImageFont.ImageFont,
-    fill: tuple[int, int, int, int],
-    max_width: int,
-    line_gap: int,
-    anchor: str = "la",
-) -> int:
-    x, y = xy
-    lines = wrap_text(draw, text, font, max_width)
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font)
-        line_height = bbox[3] - bbox[1]
-        if anchor == "ra":
-            draw.text((x - text_width(draw, line, font), y), line, font=font, fill=fill)
-        else:
-            draw.text((x, y), line, font=font, fill=fill)
-        y += line_height + line_gap
-    return y
-
-
-def label_size(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont) -> tuple[int, int]:
-    bbox = draw.textbbox((0, 0), text, font=font)
-    return bbox[2] - bbox[0] + 40, bbox[3] - bbox[1] + 22
-
-
-def draw_label(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, font: ImageFont.ImageFont, accent: str) -> None:
-    x, y = xy
-    padding_x = 20
-    padding_y = 11
-    width, height = label_size(draw, text, font)
-    draw.rounded_rectangle((x, y, x + width, y + height), radius=8, fill=hex_to_rgba(accent, 230))
-    draw.text((x + padding_x, y + padding_y - 2), text, font=font, fill=(16, 24, 32, 255))
-
-
-def compose(event: dict[str, Any], candidate_path: Path, output_path: Path) -> None:
-    root = repo_root()
-    check_assets(event, root, strict=True)
-    if not candidate_path.exists():
-        raise SystemExit(f"missing candidate image: {candidate_path}")
-
-    style = event.get("style", {})
-    accent = style.get("accent_color", DEFAULT_ACCENT)
-    brand = style.get("brand_color", DEFAULT_BRAND)
-
-    with Image.open(candidate_path) as candidate:
-        poster = cover_image(candidate, POSTER_SIZE)
-    poster = draw_gradient_overlay(poster)
-    draw = ImageDraw.Draw(poster)
-
-    title_font = find_font(82, bold=True)
-    subtitle_font = find_font(30)
-    speaker_font = find_font(52, bold=True)
-    body_font = find_font(31)
-    small_font = find_font(25)
-    fee_font = find_font(23)
-    meta_font = find_font(32, bold=True)
-
-    margin = 72
-    white = (255, 255, 255, 245)
-    muted = (225, 232, 238, 235)
-
-    logo_path = resolve_asset(root, event["assets"]["logo"])
-    qr_path = resolve_asset(root, event["assets"]["qr"])
-
-    with Image.open(logo_path) as logo_raw:
-        logo = fit_within(logo_raw, (260, 150))
-    poster.alpha_composite(logo, (margin, 54))
-
-    meeting_label = event["club"]["meeting_number"]
-    meeting_label_width, _ = label_size(draw, meeting_label, small_font)
-    draw_label(draw, (POSTER_SIZE[0] - margin - meeting_label_width, 70), meeting_label, small_font, accent)
-
-    y = 230
-    draw.text((margin, y), event["club"]["name"], font=small_font, fill=muted)
-    y += 70
-    y = draw_text_block(draw, (margin, y), event["theme"], title_font, white, 850, 16)
-    if event.get("subtitle"):
-        y += 24
-        draw_text_block(draw, (margin, y), event["subtitle"], subtitle_font, muted, 780, 10)
-
-    speaker_y = 1235
-    draw.line((margin, speaker_y - 34, margin + 128, speaker_y - 34), fill=hex_to_rgba(accent, 255), width=6)
-    draw.text((margin, speaker_y), event["speaker"]["name"], font=speaker_font, fill=white)
-    speaker_y += 76
-    speaker_y = draw_text_block(draw, (margin, speaker_y), event["speaker"]["title"], body_font, muted, 820, 9)
-    speaker_y += 10
-    draw_text_block(draw, (margin, speaker_y), event["speaker"]["bio"], body_font, muted, 820, 9)
-
-    panel_top = 1538
-    panel = Image.new("RGBA", (POSTER_SIZE[0] - margin * 2, 304), hex_to_rgba(brand, 178))
-    panel_mask = rounded_rectangle_mask(panel.size, 24)
-    poster.paste(panel, (margin, panel_top), panel_mask)
-
-    with Image.open(qr_path) as qr_raw:
-        qr = fit_within(qr_raw, (178, 178))
-    qr_bg_size = (204, 204)
-    qr_bg = Image.new("RGBA", qr_bg_size, (255, 255, 255, 255))
-    qr_bg_mask = rounded_rectangle_mask(qr_bg_size, 14)
-    qr_x = POSTER_SIZE[0] - margin - qr_bg_size[0] - 26
-    qr_y = panel_top + 21
-    poster.paste(qr_bg, (qr_x, qr_y), qr_bg_mask)
-    poster.alpha_composite(qr, (qr_x + (qr_bg_size[0] - qr.width) // 2, qr_y + (qr_bg_size[1] - qr.height) // 2))
-
-    text_x = margin + 34
-    text_y = panel_top + 34
-    draw.text((text_x, text_y), event["event"]["time"], font=meta_font, fill=white)
-    text_y += 56
-    text_y = draw_text_block(draw, (text_x, text_y), event["event"]["location"], body_font, muted, 600, 8)
-    if event["event"].get("fee"):
-        text_y += 10
-        draw_text_block(draw, (text_x, text_y), event["event"]["fee"], fee_font, muted, 630, 7)
-    qr_label = event.get("club", {}).get("wechat_label", "扫码关注公众号")
-    label_width = text_width(draw, qr_label, small_font)
-    draw.text((qr_x + (qr_bg_size[0] - label_width) // 2, qr_y + qr_bg_size[1] + 8), qr_label, font=small_font, fill=muted)
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    poster.convert("RGB").save(output_path, "PNG", optimize=True)
-
-
 def _save_qr_debug_image(
     poster: Image.Image,
     debug_sink: dict[str, Any],
@@ -916,9 +741,9 @@ def finalize_ai(
     layout = event.get("layout", {})
     logo_mode = layout.get("logo_mode", "ai")
     logo_box = box_from_layout(event, "logo_box", [52, 42, 295, 135])
-    fallback_qr_box = box_from_layout(event, "qr_box", [70, 1648, 170, 170])
-    qr_box = fallback_qr_box
-    qr_source = "configured fallback"
+    configured_qr_box = box_from_layout(event, "qr_box", [70, 1648, 170, 170])
+    qr_box = configured_qr_box
+    qr_source = "configured coordinates"
     debug_sink: dict[str, Any] = {}
 
     auto_detect = bool_from_layout(event, "qr_auto_detect", True)
@@ -967,7 +792,7 @@ def finalize_ai(
         else:
             print(
                 "[WARN] QR auto-detection found no candidate; falling back to "
-                f"layout.qr_box={fallback_qr_box}. Visually verify the final "
+                f"layout.qr_box={configured_qr_box}. Visually verify the final "
                 "poster before sharing."
             )
 
@@ -1027,17 +852,6 @@ def prepare_command(args: argparse.Namespace) -> None:
             print(f"- {warning}")
 
 
-def compose_command(args: argparse.Namespace) -> None:
-    event = load_event(Path(args.event))
-    paths = event_paths(event)
-    candidate = paths.output_dir / f"candidate-{args.candidate}.png"
-    output = Path(args.output) if args.output else paths.final_file
-    if not output.is_absolute():
-        output = paths.root / output
-    compose(event, candidate, output)
-    print(f"Wrote {output}")
-
-
 def finalize_command(args: argparse.Namespace) -> None:
     event = load_event(Path(args.event))
     paths = event_paths(event)
@@ -1059,18 +873,12 @@ def finalize_command(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Prepare prompts and compose Toastmasters posters")
+    parser = argparse.ArgumentParser(description="Prepare prompts and finalize AI-generated Toastmasters posters")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     prepare = subparsers.add_parser("prepare", help="create prompt.md for 3 image-generation candidates")
     prepare.add_argument("--event", required=True, help="path to event JSON")
     prepare.set_defaults(func=prepare_command)
-
-    compose_parser = subparsers.add_parser("compose", help="compose final poster from a selected candidate")
-    compose_parser.add_argument("--event", required=True, help="path to event JSON")
-    compose_parser.add_argument("--candidate", type=int, choices=[1, 2, 3], default=1, help="candidate number to use")
-    compose_parser.add_argument("--output", help="optional output path")
-    compose_parser.set_defaults(func=compose_command)
 
     finalize_parser = subparsers.add_parser("finalize", help="overlay real logo and QR onto an AI-designed full poster")
     finalize_parser.add_argument("--event", required=True, help="path to event JSON")
